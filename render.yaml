@@ -3,7 +3,7 @@ services:
     name: optimizador-rutas
     env: python
     buildCommand: pip install -r requirements.txt
-    startCommand: gunicorn -b 0.0.0.0:$PORT app:app
+    startCommand: gunicorn -b 0.0.0.0:$PORT app:app --timeout 120 --workers 1 --max-requests 10
     envVars:
       - key: PYTHON_VERSION
         value: 3.9.16
