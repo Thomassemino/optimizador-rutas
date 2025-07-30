@@ -1,0 +1,653 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Optimizador de Rutas</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+        
+        .header {
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+        
+        .header h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+        }
+        
+        .header p {
+            opacity: 0.9;
+            font-size: 1.1rem;
+        }
+        
+        .main-content {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+            padding: 30px;
+        }
+        
+        .input-section {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+        
+        .card {
+            background: #f8f9fa;
+            border-radius: 10px;
+            padding: 20px;
+            border: 1px solid #e9ecef;
+        }
+        
+        .card h3 {
+            color: #495057;
+            margin-bottom: 15px;
+            font-size: 1.2rem;
+            border-bottom: 2px solid #4facfe;
+            padding-bottom: 5px;
+        }
+        
+        .input-group {
+            margin-bottom: 15px;
+        }
+        
+        .input-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: 600;
+            color: #495057;
+        }
+        
+        .input-group input,
+        .input-group select,
+        .input-group textarea {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #dee2e6;
+            border-radius: 8px;
+            font-size: 14px;
+            transition: border-color 0.3s;
+        }
+        
+        .input-group input:focus,
+        .input-group select:focus,
+        .input-group textarea:focus {
+            outline: none;
+            border-color: #4facfe;
+        }
+        
+        .tabs {
+            display: flex;
+            background: #e9ecef;
+            border-radius: 8px;
+            margin-bottom: 15px;
+        }
+        
+        .tab {
+            flex: 1;
+            padding: 10px;
+            text-align: center;
+            cursor: pointer;
+            border-radius: 8px;
+            font-weight: 600;
+            transition: all 0.3s;
+        }
+        
+        .tab.active {
+            background: #4facfe;
+            color: white;
+        }
+        
+        .tab-content {
+            display: none;
+        }
+        
+        .tab-content.active {
+            display: block;
+        }
+        
+        .btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            text-decoration: none;
+            display: inline-block;
+            text-align: center;
+        }
+        
+        .btn-primary {
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(79, 172, 254, 0.3);
+        }
+        
+        .btn-success {
+            background: linear-gradient(135deg, #56ab2f 0%, #a8e6cf 100%);
+            color: white;
+        }
+        
+        .btn-success:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(86, 171, 47, 0.3);
+        }
+        
+        .btn-small {
+            padding: 8px 16px;
+            font-size: 14px;
+        }
+        
+        .address-list {
+            background: white;
+            border: 2px solid #dee2e6;
+            border-radius: 8px;
+            max-height: 200px;
+            overflow-y: auto;
+            padding: 10px;
+        }
+        
+        .address-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 8px;
+            margin-bottom: 5px;
+            background: #f8f9fa;
+            border-radius: 5px;
+        }
+        
+        .address-item:last-child {
+            margin-bottom: 0;
+        }
+        
+        .remove-btn {
+            background: #dc3545;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            padding: 4px 8px;
+            cursor: pointer;
+            font-size: 12px;
+        }
+        
+        .format-info {
+            background: #e3f2fd;
+            border: 1px solid #90caf9;
+            border-radius: 8px;
+            padding: 15px;
+            margin-top: 10px;
+        }
+        
+        .format-info h4 {
+            color: #1976d2;
+            margin-bottom: 10px;
+        }
+        
+        .format-info code {
+            background: #f5f5f5;
+            padding: 2px 5px;
+            border-radius: 3px;
+            font-family: monospace;
+        }
+        
+        .results-section {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+        
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: #6c757d;
+        }
+        
+        .spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #4facfe;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 20px;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        .error {
+            background: #f8d7da;
+            color: #721c24;
+            padding: 15px;
+            border-radius: 8px;
+            border: 1px solid #f5c6cb;
+        }
+        
+        .results {
+            background: #d4edda;
+            border: 1px solid #c3e6cb;
+            border-radius: 8px;
+            padding: 20px;
+        }
+        
+        .metrics {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+        
+        .metric {
+            text-align: center;
+            background: white;
+            padding: 15px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        
+        .metric-value {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: #4facfe;
+        }
+        
+        .metric-label {
+            color: #6c757d;
+            font-size: 0.9rem;
+        }
+        
+        .route-list {
+            background: white;
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 20px;
+        }
+        
+        .route-item {
+            display: flex;
+            align-items: center;
+            padding: 10px;
+            border-bottom: 1px solid #e9ecef;
+        }
+        
+        .route-item:last-child {
+            border-bottom: none;
+        }
+        
+        .route-number {
+            background: #4facfe;
+            color: white;
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            margin-right: 15px;
+        }
+        
+        .map-container {
+            width: 100%;
+            height: 400px;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        }
+        
+        @media (max-width: 768px) {
+            .main-content {
+                grid-template-columns: 1fr;
+            }
+            
+            .header h1 {
+                font-size: 2rem;
+            }
+            
+            .metrics {
+                grid-template-columns: 1fr 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🗺️ Optimizador de Rutas</h1>
+            <p>Encuentra la ruta más eficiente para visitar múltiples ubicaciones</p>
+        </div>
+        
+        <div class="main-content">
+            <div class="input-section">
+                <!-- Configuración -->
+                <div class="card">
+                    <h3>⚙️ Configuración</h3>
+                    
+                    <div class="input-group">
+                        <label for="startAddress">📍 Dirección de inicio:</label>
+                        <input type="text" id="startAddress" placeholder="Libertad 854, Lobos, Buenos Aires">
+                        <small style="color: #6c757d; margin-top: 5px; display: block;">
+                            <strong>Tip:</strong> Para CABA usa "dirección, CABA" • Para Provincia usa "dirección, ciudad, Buenos Aires"
+                        </small>
+                    </div>
+                    
+                    <div class="input-group">
+                        <label for="optimizationType">⚡ Optimizar por:</label>
+                        <select id="optimizationType">
+                            <option value="distance">Distancia más corta</option>
+                            <option value="duration">Tiempo más rápido</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <!-- Cargar Direcciones -->
+                <div class="card">
+                    <h3>📋 Cargar Direcciones</h3>
+                    
+                    <div class="tabs">
+                        <div class="tab active" onclick="switchTab('manual')">Manual</div>
+                        <div class="tab" onclick="switchTab('text')">Texto</div>
+                        <div class="tab" onclick="switchTab('file')">Archivo</div>
+                    </div>
+                    
+                    <!-- Manual -->
+                    <div class="tab-content active" id="manual-content">
+                        <div class="input-group">
+                            <input type="text" id="newAddress" placeholder="Av. Corrientes 1000, CABA">
+                            <button class="btn btn-primary btn-small" onclick="addAddress()" style="margin-top: 10px;">Agregar</button>
+                            <small style="color: #6c757d; margin-top: 5px; display: block;">
+                                <strong>Ejemplos:</strong> "Av. Córdoba 1646, CABA" • "Florida 500, Capital Federal"
+                            </small>
+                        </div>
+                    </div>
+                    
+                    <!-- Texto -->
+                    <div class="tab-content" id="text-content">
+                        <div class="input-group">
+                            <textarea id="addressText" rows="5" placeholder="Pega tus direcciones aquí, una por línea"></textarea>
+                            <button class="btn btn-primary btn-small" onclick="loadFromText()" style="margin-top: 10px;">Cargar</button>
+                        </div>
+                    </div>
+                    
+                    <!-- Archivo -->
+                    <div class="tab-content" id="file-content">
+                        <div class="input-group">
+                            <input type="file" id="fileInput" accept=".csv,.txt" onchange="loadFromFile()">
+                        </div>
+                        
+                        <div class="format-info">
+                            <h4>📄 Formatos soportados:</h4>
+                            <p><strong>CSV:</strong> Una dirección por línea o columna "direccion"</p>
+                            <code>
+                                direccion<br>
+                                Av. Santa Fe 1000, CABA<br>
+                                Florida 500, CABA
+                            </code>
+                            
+                            <p style="margin-top: 10px;"><strong>TXT:</strong> Una dirección por línea</p>
+                            <code>
+                                Av. Santa Fe 1000, CABA<br>
+                                Florida 500, CABA
+                            </code>
+                        </div>
+                    </div>
+                    
+                    <!-- Lista de direcciones -->
+                    <div class="input-group">
+                        <label>Direcciones cargadas (<span id="addressCount">0</span>):</label>
+                        <div class="address-list" id="addressList">
+                            <p style="color: #6c757d; text-align: center;">No hay direcciones cargadas</p>
+                        </div>
+                    </div>
+                    
+                    <button class="btn btn-primary" onclick="optimizeRoute()" style="width: 100%;">
+                        🚀 Optimizar Ruta
+                    </button>
+                </div>
+            </div>
+            
+            <div class="results-section">
+                <div class="card">
+                    <h3>📊 Resultados</h3>
+                    <div id="results">
+                        <p style="color: #6c757d; text-align: center;">Los resultados aparecerán aquí una vez optimices la ruta</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let addresses = [];
+        
+        function switchTab(tabName) {
+            document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+            document.querySelectorAll('.tab').forEach(el => el.classList.remove('active'));
+            
+            document.getElementById(tabName + '-content').classList.add('active');
+            event.target.classList.add('active');
+        }
+        
+        function addAddress() {
+            const input = document.getElementById('newAddress');
+            const address = input.value.trim();
+            
+            if (address && !addresses.includes(address)) {
+                addresses.push(address);
+                input.value = '';
+                updateAddressList();
+            }
+        }
+        
+        function removeAddress(index) {
+            addresses.splice(index, 1);
+            updateAddressList();
+        }
+        
+        function loadFromText() {
+            const text = document.getElementById('addressText').value.trim();
+            if (text) {
+                const newAddresses = text.split('\n').map(addr => addr.trim()).filter(addr => addr);
+                addresses = [...new Set([...addresses, ...newAddresses])];
+                document.getElementById('addressText').value = '';
+                updateAddressList();
+            }
+        }
+        
+        function loadFromFile() {
+            const fileInput = document.getElementById('fileInput');
+            const file = fileInput.files[0];
+            
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    const content = e.target.result;
+                    let newAddresses = [];
+                    
+                    if (file.name.toLowerCase().endsWith('.csv')) {
+                        const lines = content.split('\n').map(line => line.trim()).filter(line => line);
+                        const header = lines[0].toLowerCase();
+                        
+                        if (header.includes('direccion') || header.includes('address')) {
+                            newAddresses = lines.slice(1).map(line => {
+                                return line.split(',')[0].replace(/"/g, '').trim();
+                            }).filter(addr => addr);
+                        } else {
+                            newAddresses = lines.map(line => line.split(',')[0].replace(/"/g, '').trim()).filter(addr => addr);
+                        }
+                    } else {
+                        newAddresses = content.split('\n').map(addr => addr.trim()).filter(addr => addr);
+                    }
+                    
+                    addresses = [...new Set([...addresses, ...newAddresses])];
+                    updateAddressList();
+                };
+                reader.readAsText(file);
+            }
+        }
+        
+        function updateAddressList() {
+            const list = document.getElementById('addressList');
+            const count = document.getElementById('addressCount');
+            
+            count.textContent = addresses.length;
+            
+            if (addresses.length === 0) {
+                list.innerHTML = '<p style="color: #6c757d; text-align: center;">No hay direcciones cargadas</p>';
+                return;
+            }
+            
+            list.innerHTML = addresses.map((addr, index) => `
+                <div class="address-item">
+                    <span>${addr}</span>
+                    <button class="remove-btn" onclick="removeAddress(${index})">×</button>
+                </div>
+            `).join('');
+        }
+        
+        async function optimizeRoute() {
+            const startAddress = document.getElementById('startAddress').value.trim();
+            const optimizationType = document.getElementById('optimizationType').value;
+            const results = document.getElementById('results');
+            
+            // Validaciones
+            if (!startAddress) {
+                results.innerHTML = '<div class="error">⚠️ Por favor ingresa la dirección de inicio</div>';
+                return;
+            }
+            
+            if (addresses.length < 1) {
+                results.innerHTML = '<div class="error">⚠️ Agrega al menos 1 dirección de destino</div>';
+                return;
+            }
+            
+            // Mostrar loading
+            results.innerHTML = `
+                <div class="loading">
+                    <div class="spinner"></div>
+                    <p>Optimizando ruta... Esto puede tomar unos momentos</p>
+                </div>
+            `;
+            
+            try {
+                const response = await fetch('/optimize', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        addresses: addresses,
+                        start_address: startAddress,
+                        optimization_type: optimizationType
+                    })
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    displayResults(data);
+                } else {
+                    results.innerHTML = `<div class="error">❌ Error: ${data.error}</div>`;
+                }
+                
+            } catch (error) {
+                results.innerHTML = `<div class="error">❌ Error de conexión: ${error.message}</div>`;
+            }
+        }
+        
+        function displayResults(data) {
+            const results = document.getElementById('results');
+            
+            const optimizationLabel = data.optimization_type === 'distance' ? 'distancia' : 'tiempo';
+            
+            results.innerHTML = `
+                <div class="results">
+                    <div class="metrics">
+                        <div class="metric">
+                            <div class="metric-value">${data.total_distance_km}</div>
+                            <div class="metric-label">km totales</div>
+                        </div>
+                        <div class="metric">
+                            <div class="metric-value">${data.total_time_hours}</div>
+                            <div class="metric-label">horas</div>
+                        </div>
+                        <div class="metric">
+                            <div class="metric-value">${data.total_time_minutes}</div>
+                            <div class="metric-label">minutos</div>
+                        </div>
+                        <div class="metric">
+                            <div class="metric-value">${data.optimized_route.length}</div>
+                            <div class="metric-label">paradas</div>
+                        </div>
+                    </div>
+                    
+                    <p style="text-align: center; color: #28a745; font-weight: bold; margin-bottom: 20px;">
+                        ✅ Ruta optimizada por ${optimizationLabel}
+                    </p>
+                    
+                    <div class="route-list">
+                        <h4 style="margin-bottom: 15px; color: #495057;">📍 Orden de visita:</h4>
+                        ${data.optimized_route.map((addr, index) => `
+                            <div class="route-item">
+                                <div class="route-number">${index + 1}</div>
+                                <div>${addr}</div>
+                            </div>
+                        `).join('')}
+                    </div>
+                    
+                    <div style="text-align: center; margin-bottom: 20px;">
+                        <a href="${data.google_maps_link}" target="_blank" class="btn btn-success">
+                            🗺️ Abrir en Google Maps
+                        </a>
+                    </div>
+                    
+                    <div class="map-container">
+                        ${data.map_html}
+                    </div>
+                </div>
+            `;
+        }
+        
+        // Permitir agregar dirección con Enter
+        document.getElementById('newAddress').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                addAddress();
+            }
+        });
+    </script>
+</body>
+</html>
